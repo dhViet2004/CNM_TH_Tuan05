@@ -52,10 +52,3 @@ Body mẫu:
   "price": 100,
   "url_image": "https://example.com/image.png"
 }
-```
-
-## Nộp bài
-Chuẩn bị file Word gồm:
-1) Hình DynamoDB Local chạy trên Docker.
-2) Hình chạy chương trình (API trả về dữ liệu).
-3) Link GitHub của project (thay bằng link của bạn).
