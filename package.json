@@ -1,0 +1,30 @@
+{
+  "name": "node-dynamodb-crud-mvc",
+  "version": "1.0.0",
+  "description": "CRUD Node.js MVC with DynamoDB Local via Docker",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "keywords": [
+    "node",
+    "express",
+    "dynamodb",
+    "mvc",
+    "crud"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.517.0",
+    "@aws-sdk/lib-dynamodb": "^3.517.0",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "uuid": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

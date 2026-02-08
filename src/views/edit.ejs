@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edit Product</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; }
+      form { max-width: 480px; display: grid; gap: 12px; }
+      input { padding: 8px; }
+      button { padding: 10px; }
+      a { display: inline-block; margin-top: 12px; }
+      .actions { display: flex; gap: 12px; align-items: center; }
+    </style>
+  </head>
+  <body>
+    <h1>Edit Product</h1>
+    <form method="post" action="/products/<%= product.id %>">
+      <label>
+        Name
+        <input type="text" name="name" value="<%= product.name %>" required />
+      </label>
+      <label>
+        Price
+        <input type="number" name="price" value="<%= product.price %>" required />
+      </label>
+      <label>
+        Image URL
+        <input type="url" name="url_image" value="<%= product.url_image %>" required />
+      </label>
+      <div class="actions">
+        <button type="submit">Save changes</button>
+        <a href="/products">Cancel</a>
+      </div>
+    </form>
+    <form method="post" action="/products/<%= product.id %>/delete" style="margin-top: 16px;">
+      <button type="submit" onclick="return confirm('Delete this product?');">Delete product</button>
+    </form>
+  </body>
+</html>

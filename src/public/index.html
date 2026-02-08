@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products CRUD - DynamoDB</title>
+  <style>
+    :root {
+      color-scheme: light;
+    }
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fb;
+      margin: 0;
+      padding: 32px;
+      color: #1f2933;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    h1 {
+      margin-bottom: 8px;
+    }
+    p.subtitle {
+      margin-top: 0;
+      color: #52606d;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    input {
+      width: 100%;
+      padding: 10px 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #cbd2d9;
+      font-size: 14px;
+    }
+    button {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: #475467;
+    }
+    button.danger {
+      background: #dc2626;
+    }
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid #e4e7eb;
+      font-size: 14px;
+    }
+    th {
+      background: #f0f4f8;
+    }
+    .image-preview {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid #e4e7eb;
+    }
+    .status {
+      margin-top: 12px;
+      font-size: 14px;
+      color: #52606d;
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Products CRUD</h1>
+    <p class="subtitle">Giao diện MVC cho DynamoDB Local</p>
+
+    <div class="grid">
+      <div class="card">
+        <h3>Thêm / Cập nhật sản phẩm</h3>
+        <label for="productId">ID (bỏ trống để tạo mới)</label>
+        <input id="productId" placeholder="VD: 6b9c..." />
+        <label for="productName">Tên</label>
+        <input id="productName" placeholder="Product A" required />
+        <label for="productPrice">Giá</label>
+        <input id="productPrice" type="number" placeholder="100" required />
+        <label for="productImage">URL hình ảnh</label>
+        <input id="productImage" placeholder="https://..." required />
+        <div class="row">
+          <button id="saveBtn">Lưu</button>
+          <button id="resetBtn" class="secondary" type="button">Xoá form</button>
+        </div>
+        <div class="status" id="formStatus"></div>
+      </div>
+
+      <div class="card">
+        <h3>Xoá sản phẩm</h3>
+        <label for="deleteId">ID</label>
+        <input id="deleteId" placeholder="Nhập ID cần xoá" />
+        <button id="deleteBtn" class="danger">Xoá</button>
+        <div class="status" id="deleteStatus"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 24px;">
+      <div class="row" style="justify-content: space-between;">
+        <h3>Danh sách sản phẩm</h3>
+        <button id="refreshBtn" class="secondary">Tải lại</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tên</th>
+            <th>Giá</th>
+            <th>Hình</th>
+          </tr>
+        </thead>
+        <tbody id="productTable"></tbody>
+      </table>
+      <div class="status" id="listStatus"></div>
+    </div>
+  </div>
+
+  <script>
+    const apiBase = "/api/products";
+    const formStatus = document.getElementById("formStatus");
+    const deleteStatus = document.getElementById("deleteStatus");
+    const listStatus = document.getElementById("listStatus");
+
+    const productId = document.getElementById("productId");
+    const productName = document.getElementById("productName");
+    const productPrice = document.getElementById("productPrice");
+    const productImage = document.getElementById("productImage");
+
+    const deleteId = document.getElementById("deleteId");
+    const productTable = document.getElementById("productTable");
+
+    function setStatus(el, message) {
+      el.textContent = message;
+    }
+
+    async function fetchProducts() {
+      setStatus(listStatus, "Đang tải...");
+      try {
+        const res = await fetch(apiBase);
+        const data = await res.json();
+        renderTable(data);
+        setStatus(listStatus, `Tổng ${data.length} sản phẩm`);
+      } catch (error) {
+        setStatus(listStatus, "Không thể tải dữ liệu");
+      }
+    }
+
+    function renderTable(items) {
+      productTable.innerHTML = "";
+      if (!Array.isArray(items)) {
+        return;
+      }
+      items.forEach((item) => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${item.id || ""}</td>
+          <td>${item.name || ""}</td>
+          <td>${item.price ?? ""}</td>
+          <td>
+            ${item.url_image ? `<img class="image-preview" src="${item.url_image}" alt="${item.name}" />` : ""}
+          </td>
+        `;
+        row.addEventListener("click", () => fillForm(item));
+        productTable.appendChild(row);
+      });
+    }
+
+    function fillForm(item) {
+      productId.value = item.id || "";
+      productName.value = item.name || "";
+      productPrice.value = item.price ?? "";
+      productImage.value = item.url_image || "";
+      setStatus(formStatus, "Đã chọn sản phẩm để cập nhật");
+    }
+
+    async function saveProduct() {
+      const payload = {
+        name: productName.value.trim(),
+        price: Number(productPrice.value),
+        url_image: productImage.value.trim(),
+      };
+
+      if (!payload.name || !payload.url_image || Number.isNaN(payload.price)) {
+        setStatus(formStatus, "Vui lòng nhập đủ thông tin");
+        return;
+      }
+
+      const id = productId.value.trim();
+      const method = id ? "PUT" : "POST";
+      const url = id ? `${apiBase}/${id}` : apiBase;
+
+      setStatus(formStatus, "Đang lưu...");
+      try {
+        const res = await fetch(url, {
+          method,
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (!res.ok) {
+          const error = await res.json();
+          setStatus(formStatus, error.message || "Lưu thất bại");
+          return;
+        }
+        const result = await res.json();
+        fillForm(result);
+        setStatus(formStatus, "Lưu thành công");
+        await fetchProducts();
+      } catch (error) {
+        setStatus(formStatus, "Không thể lưu sản phẩm");
+      }
+    }
+
+    async function removeProduct() {
+      const id = deleteId.value.trim();
+      if (!id) {
+        setStatus(deleteStatus, "Vui lòng nhập ID");
+        return;
+      }
+      setStatus(deleteStatus, "Đang xoá...");
+      try {
+        const res = await fetch(`${apiBase}/${id}`, { method: "DELETE" });
+        if (!res.ok) {
+          const error = await res.json();
+          setStatus(deleteStatus, error.message || "Xoá thất bại");
+          return;
+        }
+        setStatus(deleteStatus, "Đã xoá");
+        deleteId.value = "";
+        await fetchProducts();
+      } catch (error) {
+        setStatus(deleteStatus, "Không thể xoá");
+      }
+    }
+
+    function resetForm() {
+      productId.value = "";
+      productName.value = "";
+      productPrice.value = "";
+      productImage.value = "";
+      setStatus(formStatus, "");
+    }
+
+    document.getElementById("saveBtn").addEventListener("click", saveProduct);
+    document.getElementById("deleteBtn").addEventListener("click", removeProduct);
+    document.getElementById("refreshBtn").addEventListener("click", fetchProducts);
+    document.getElementById("resetBtn").addEventListener("click", resetForm);
+
+    fetchProducts();
+  </script>
+</body>
+</html>

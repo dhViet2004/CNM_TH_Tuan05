@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Products</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 24px; }
+      table { border-collapse: collapse; width: 100%; }
+      th, td { border: 1px solid #ddd; padding: 8px; }
+      th { background: #f3f3f3; text-align: left; }
+      img { max-width: 120px; height: auto; }
+      .actions { margin-bottom: 16px; }
+      .row-actions { display: flex; gap: 8px; align-items: center; }
+      .row-actions form { margin: 0; }
+      .row-actions button { padding: 6px 10px; }
+    </style>
+  </head>
+  <body>
+    <h1>Products</h1>
+    <% if (typeof errorMessage !== 'undefined' && errorMessage) { %>
+    <p style="color: #b00020; margin-bottom: 12px;">
+      <%= errorMessage %>
+    </p>
+    <% } %>
+    <div class="actions">
+      <a href="/products/add">Add product</a>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Price</th>
+          <th>Image</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (products.length === 0) { %>
+        <tr>
+          <td colspan="4">No products found</td>
+        </tr>
+        <% } %>
+        <% products.forEach((p) => { %>
+        <tr>
+          <td><%= p.id %></td>
+          <td><%= p.name %></td>
+          <td><%= p.price %></td>
+          <td>
+            <% if (p.url_image) { %>
+            <img src="<%= p.url_image %>" alt="<%= p.name %>" />
+            <% } %>
+          </td>
+          <td>
+            <div class="row-actions">
+              <a href="/products/<%= p.id %>/edit">Edit</a>
+              <form method="post" action="/products/<%= p.id %>/delete" onsubmit="return confirm('Delete this product?');">
+                <button type="submit">Delete</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </body>
+</html>
